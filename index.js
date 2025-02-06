@@ -1,28 +1,27 @@
-// index.js
-const express = require('express');
-const mongoose = require('mongoose');
-require('dotenv').config();
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const User = require("./schema"); 
+const PORT = process.env.PORT ;
 
 const app = express();
-const port = process.env.PORT || 6000;
+app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-.then(() => {
-    console.log('Connected to database');
-})
-.catch((error) => {
-    console.error('Error connecting to database:', error);
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("Connected to database"))
+  .catch(err => console.error("Error connecting to database:", err));
+
+// Define API Route
+app.post("/api/users", async (req, res) => {
+  try {
+    const newUser = new User(req.body);
+    await newUser.validate(); // Validate before saving
+    const savedUser = await newUser.save();
+    res.status(201).json({ message: "User created successfully", user: savedUser });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
-
-app.get('/', (req, res) => {
-  res.send('Customer Management System Backend');
-});
-
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
